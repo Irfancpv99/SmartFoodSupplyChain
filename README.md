@@ -45,7 +45,7 @@ cd SmartFoodSupplyChain
 2. Install frontend dependencies:
 ```bash
 cd frontend
-npm install
+npm install --legacy-peer-deps
 ```
 
 3. Install backend dependencies:
@@ -63,16 +63,27 @@ mysql -u root -p < database/schema.sql
 ```bash
 cp backend/.env.example backend/.env
 # Edit .env with your database credentials
+
+cp frontend/.env.example frontend/.env
+# Edit frontend .env if needed
 ```
 
 6. Start development servers:
 ```bash
-# Frontend (in frontend directory)
-npm start
+# Backend (in backend/public directory)
+cd backend/public
+php -S localhost:8000
 
-# Backend (in backend directory)
-php -S localhost:8000 -t public
+# Frontend (in frontend directory - open new terminal)
+cd frontend
+npm start
 ```
+
+Access the application at http://localhost:3000
+
+**Default Login:**
+- Username: `admin`
+- Password: `admin123`
 
 ## Project Structure
 
@@ -127,6 +138,39 @@ SmartFoodSupplyChain/
 2. View complete menu
 3. Check blockchain verification
 4. View DDT details and vendor info
+
+## Documentation
+
+- **[User Guide](docs/USER_GUIDE.md)**: How to use the platform for each role
+- **[API Documentation](docs/API.md)**: Complete API reference
+- **[Deployment Guide](docs/DEPLOYMENT.md)**: Production deployment instructions
+
+## Features by Portal
+
+### Vendor Portal
+- ✅ DDT/Invoice upload with document photos
+- ✅ Multi-school delivery management
+- ✅ Product list management
+- ✅ Transaction history
+- ✅ Automatic blockchain hash generation
+
+### School Administration Portal
+- ✅ Dashboard with statistics
+- ✅ Menu creation with ingredient tracking
+- ✅ DDT-Menu linkage management
+- ✅ DDT coverage validation
+- ✅ QR code generation
+- ✅ Menu publication workflow
+- ✅ Historical archive
+
+### Consumer Portal (Public)
+- ✅ No login required
+- ✅ QR code scanner
+- ✅ Manual menu ID verification
+- ✅ Complete ingredient traceability
+- ✅ Vendor information display
+- ✅ Blockchain verification status
+- ✅ Full transparency
 
 ## API Documentation
 
