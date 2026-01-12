@@ -27,31 +27,31 @@ const CreateMenu = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const loadSchools = async () => {
+      try {
+        const response = await schoolsAPI.getAll();
+        setSchools(response.data.schools);
+        // Auto-select school if user is school admin
+        if (user.school_id && response.data.schools.length > 0) {
+          setFormData(prev => ({ ...prev, school_id: user.school_id }));
+        }
+      } catch (err) {
+        console.error('Failed to load schools', err);
+      }
+    };
+
+    const loadDocuments = async () => {
+      try {
+        const response = await documentsAPI.getAll();
+        setDocuments(response.data.documents.filter(d => d.status === 'verified'));
+      } catch (err) {
+        console.error('Failed to load documents', err);
+      }
+    };
+
     loadSchools();
     loadDocuments();
-  }, []);
-
-  const loadSchools = async () => {
-    try {
-      const response = await schoolsAPI.getAll();
-      setSchools(response.data.schools);
-      // Auto-select school if user is school admin
-      if (user.school_id && response.data.schools.length > 0) {
-        setFormData(prev => ({ ...prev, school_id: user.school_id }));
-      }
-    } catch (err) {
-      console.error('Failed to load schools', err);
-    }
-  };
-
-  const loadDocuments = async () => {
-    try {
-      const response = await documentsAPI.getAll();
-      setDocuments(response.data.documents.filter(d => d.status === 'verified'));
-    } catch (err) {
-      console.error('Failed to load documents', err);
-    }
-  };
+  }, [user.school_id]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -119,7 +119,7 @@ const CreateMenu = () => {
     setLoading(true);
 
     try {
-      const response = await menusAPI.create(formData);
+      await menusAPI.create(formData);
       setSuccess('Menu created successfully!');
       
       setTimeout(() => {

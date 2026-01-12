@@ -9,19 +9,19 @@ const VerifyMenu = () => {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    const loadMenuData = async () => {
+      try {
+        const response = await verifyAPI.verifyMenu(id);
+        setMenuData(response.data);
+      } catch (err) {
+        setError(err.response?.data?.message || 'Failed to verify menu');
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadMenuData();
   }, [id]);
-
-  const loadMenuData = async () => {
-    try {
-      const response = await verifyAPI.verifyMenu(id);
-      setMenuData(response.data);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to verify menu');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   if (loading) {
     return (

@@ -23,31 +23,31 @@ const UploadDocument = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
+    const loadSchools = async () => {
+      try {
+        const response = await schoolsAPI.getAll();
+        setSchools(response.data.schools);
+      } catch (err) {
+        console.error('Failed to load schools', err);
+      }
+    };
+
+    const loadVendors = async () => {
+      try {
+        const response = await vendorsAPI.getAll();
+        setVendors(response.data.vendors);
+        // Auto-select vendor if user is a vendor
+        if (user.vendor_id && response.data.vendors.length > 0) {
+          setFormData(prev => ({ ...prev, vendor_id: user.vendor_id }));
+        }
+      } catch (err) {
+        console.error('Failed to load vendors', err);
+      }
+    };
+
     loadSchools();
     loadVendors();
-  }, []);
-
-  const loadSchools = async () => {
-    try {
-      const response = await schoolsAPI.getAll();
-      setSchools(response.data.schools);
-    } catch (err) {
-      console.error('Failed to load schools', err);
-    }
-  };
-
-  const loadVendors = async () => {
-    try {
-      const response = await vendorsAPI.getAll();
-      setVendors(response.data.vendors);
-      // Auto-select vendor if user is a vendor
-      if (user.vendor_id && response.data.vendors.length > 0) {
-        setFormData(prev => ({ ...prev, vendor_id: user.vendor_id }));
-      }
-    } catch (err) {
-      console.error('Failed to load vendors', err);
-    }
-  };
+  }, [user.vendor_id]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
