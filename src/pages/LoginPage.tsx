@@ -54,7 +54,10 @@ export default function LoginPage() {
         toast.success("Login successful!", {
           description: "Redirecting to your dashboard...",
         });
-        // Don't set isLoading to false here - let the redirect happen
+        // Set a timeout to clear loading state if redirect doesn't happen within 3 seconds
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 3000);
         // The useEffect above will handle the redirect based on roles
       }
     } catch (err) {
