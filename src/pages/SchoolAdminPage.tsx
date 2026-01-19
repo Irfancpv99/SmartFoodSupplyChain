@@ -75,14 +75,18 @@ export default function SchoolAdminPage() {
   useEffect(() => {
     if (!authLoading) {
       if (!user) {
+        console.log('SchoolAdmin: No user, redirecting to login');
         navigate('/login');
       } else if (!hasRole('school_admin')) {
+        console.log('SchoolAdmin: User lacks school_admin role, redirecting based on available roles');
         // Redirect to appropriate dashboard based on their role
         if (hasRole('admin')) {
           navigate('/admin');
         } else if (hasRole('vendor')) {
           navigate('/vendor');
         } else {
+          // User has no recognized roles, redirect to home
+          console.warn('SchoolAdmin: User has no recognized roles, redirecting to home');
           navigate('/');
         }
       }

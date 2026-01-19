@@ -62,14 +62,18 @@ export default function VendorPortalPage() {
   useEffect(() => {
     if (!authLoading) {
       if (!user) {
+        console.log('VendorPortal: No user, redirecting to login');
         navigate('/login');
       } else if (!hasRole('vendor')) {
+        console.log('VendorPortal: User lacks vendor role, redirecting based on available roles');
         // Redirect to appropriate dashboard based on their role
         if (hasRole('admin')) {
           navigate('/admin');
         } else if (hasRole('school_admin')) {
           navigate('/school');
         } else {
+          // User has no recognized roles, redirect to home
+          console.warn('VendorPortal: User has no recognized roles, redirecting to home');
           navigate('/');
         }
       }

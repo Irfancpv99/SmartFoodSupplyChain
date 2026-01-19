@@ -56,14 +56,18 @@ export default function AdminDashboardPage() {
   useEffect(() => {
     if (!authLoading) {
       if (!user) {
+        console.log('AdminDashboard: No user, redirecting to login');
         navigate('/login');
       } else if (!hasRole('admin')) {
+        console.log('AdminDashboard: User lacks admin role, redirecting based on available roles');
         // Redirect to appropriate dashboard based on their role
         if (hasRole('vendor')) {
           navigate('/vendor');
         } else if (hasRole('school_admin')) {
           navigate('/school');
         } else {
+          // User has no recognized roles, redirect to home
+          console.warn('AdminDashboard: User has no recognized roles, redirecting to home');
           navigate('/');
         }
       }
