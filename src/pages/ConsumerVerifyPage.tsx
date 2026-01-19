@@ -43,6 +43,11 @@ export default function ConsumerVerifyPage() {
 
   const handleVerify = () => {
     if (!menuId.trim()) {
+      toast({
+        title: "Menu ID Required",
+        description: "Please enter a menu ID to continue.",
+        variant: "destructive",
+      });
       return;
     }
     
@@ -64,14 +69,24 @@ export default function ConsumerVerifyPage() {
     
     let menuIdToNavigate: string | null = null;
     
-    // Check if the scanned result is already a URL path like /menu/{menuId}
-    if (result.trim().startsWith(MENU_PATH_PREFIX)) {
-      // Extract the menu ID from the path and sanitize it
-      const menuIdFromPath = result.trim().substring(MENU_PATH_PREFIX.length);
-      menuIdToNavigate = sanitizeMenuId(menuIdFromPath);
-    } else {
-      // Otherwise, it's just a menuId, sanitize it
-      menuIdToNavigate = sanitizeMenuId(result);
+    // Try to parse as URL first (defensive programming)
+    try {
+      const url = new URL(result.trim());
+      const pathParts = url.pathname.split('/');
+      const menuIndex = pathParts.findIndex(p => p === 'menu');
+      if (menuIndex !== -1 && pathParts[menuIndex + 1]) {
+        menuIdToNavigate = sanitizeMenuId(pathParts[menuIndex + 1]);
+      }
+    } catch {
+      // Not a valid URL, treat as direct input
+      // Check if it's a path like /menu/{menuId}
+      if (result.trim().startsWith(MENU_PATH_PREFIX)) {
+        const menuIdFromPath = result.trim().substring(MENU_PATH_PREFIX.length);
+        menuIdToNavigate = sanitizeMenuId(menuIdFromPath);
+      } else {
+        // Otherwise, it's just a menuId
+        menuIdToNavigate = sanitizeMenuId(result);
+      }
     }
     
     // Navigate only if we have a valid menu ID
@@ -147,7 +162,6 @@ export default function ConsumerVerifyPage() {
                   </Button>
                   <Button 
                     onClick={handleVerify} 
-                    disabled={!menuId.trim()}
                     className="h-12 px-6 bg-gradient-hero"
                   >
                     <Search className="mr-2 h-4 w-4" />
