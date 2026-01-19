@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { QRScanner } from "@/components/QRScanner";
-import { useAuth } from "@/contexts/AuthContext";
 import { 
   QrCode, 
   Search, 
@@ -18,29 +17,38 @@ import {
   Info
 } from "lucide-react";
 
+const MENU_PATH_PREFIX = "/menu/";
+
 export default function ConsumerVerifyPage() {
   const [menuId, setMenuId] = useState("");
   const [showScanner, setShowScanner] = useState(false);
   const navigate = useNavigate();
-  const { user } = useAuth();
 
   const handleVerify = () => {
     if (!menuId.trim()) {
       return;
     }
-    // Redirect to the menu page
-    navigate(`/menu/${menuId.trim()}`);
+    // Sanitize and redirect to the menu page
+    const sanitizedMenuId = menuId.trim().replace(/[^a-zA-Z0-9-_]/g, '');
+    navigate(`${MENU_PATH_PREFIX}${sanitizedMenuId}`);
   };
 
   const handleScan = (result: string) => {
     setShowScanner(false);
     
+    // Sanitize the scanned result to prevent XSS
+    const sanitizedResult = result.trim();
+    
     // Check if the scanned result is already a URL path like /menu/{menuId}
-    if (result.startsWith('/menu/')) {
-      navigate(result);
+    if (sanitizedResult.startsWith(MENU_PATH_PREFIX)) {
+      // Extract the menu ID from the path and sanitize it
+      const menuIdFromPath = sanitizedResult.substring(MENU_PATH_PREFIX.length);
+      const sanitizedMenuId = menuIdFromPath.replace(/[^a-zA-Z0-9-_]/g, '');
+      navigate(`${MENU_PATH_PREFIX}${sanitizedMenuId}`);
     } else {
-      // Otherwise, it's just a menuId, so navigate to /menu/{menuId}
-      navigate(`/menu/${result}`);
+      // Otherwise, it's just a menuId, sanitize and navigate to /menu/{menuId}
+      const sanitizedMenuId = sanitizedResult.replace(/[^a-zA-Z0-9-_]/g, '');
+      navigate(`${MENU_PATH_PREFIX}${sanitizedMenuId}`);
     }
   };
 
