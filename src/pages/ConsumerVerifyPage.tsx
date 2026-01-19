@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { QRScanner } from "@/components/QRScanner";
+import { useToast } from "@/hooks/use-toast";
 import { 
   QrCode, 
   Search, 
@@ -20,7 +21,6 @@ import {
 const MENU_PATH_PREFIX = "/menu/";
 
 // Sanitize menu ID to prevent XSS and ensure valid format
-// Menu IDs should match the format: MENU-YYYYMMDD-XXXXXX
 const sanitizeMenuId = (input: string): string | null => {
   const trimmed = input.trim();
   
@@ -28,7 +28,7 @@ const sanitizeMenuId = (input: string): string | null => {
   const sanitized = trimmed.replace(/[^a-zA-Z0-9-_]/g, '');
   
   // Validate that the result is not empty and has reasonable length
-  if (!sanitized || sanitized.length === 0 || sanitized.length > 100) {
+  if (!sanitized || sanitized.length > 100) {
     return null;
   }
   
@@ -39,6 +39,7 @@ export default function ConsumerVerifyPage() {
   const [menuId, setMenuId] = useState("");
   const [showScanner, setShowScanner] = useState(false);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   const handleVerify = () => {
     if (!menuId.trim()) {
@@ -47,7 +48,12 @@ export default function ConsumerVerifyPage() {
     
     const sanitizedMenuId = sanitizeMenuId(menuId);
     if (!sanitizedMenuId) {
-      return; // Invalid menu ID, do nothing
+      toast({
+        title: "Invalid Menu ID",
+        description: "Please enter a valid menu ID containing only letters, numbers, hyphens, and underscores.",
+        variant: "destructive",
+      });
+      return;
     }
     
     navigate(`${MENU_PATH_PREFIX}${sanitizedMenuId}`);
@@ -71,6 +77,12 @@ export default function ConsumerVerifyPage() {
     // Navigate only if we have a valid menu ID
     if (menuIdToNavigate) {
       navigate(`${MENU_PATH_PREFIX}${menuIdToNavigate}`);
+    } else {
+      toast({
+        title: "Invalid QR Code",
+        description: "The scanned QR code does not contain a valid menu ID. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
