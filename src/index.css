@@ -1,0 +1,211 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Space+Grotesk:wght@300..700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Core palette - Italian-inspired with blockchain trust */
+    --background: 40 30% 98%;
+    --foreground: 160 30% 12%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 160 30% 12%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 160 30% 12%;
+
+    /* Primary - Forest Green (trust, freshness, food) */
+    --primary: 158 40% 32%;
+    --primary-foreground: 40 30% 98%;
+
+    /* Secondary - Warm Terracotta (Italian heritage) */
+    --secondary: 20 50% 92%;
+    --secondary-foreground: 20 40% 25%;
+
+    /* Muted - Soft sage */
+    --muted: 140 15% 94%;
+    --muted-foreground: 160 10% 45%;
+
+    /* Accent - Golden wheat */
+    --accent: 42 80% 55%;
+    --accent-foreground: 42 80% 15%;
+
+    /* Status colors */
+    --success: 158 60% 42%;
+    --success-foreground: 0 0% 100%;
+    
+    --warning: 38 92% 50%;
+    --warning-foreground: 38 92% 15%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Blockchain-inspired - Deep teal */
+    --blockchain: 185 60% 35%;
+    --blockchain-foreground: 0 0% 100%;
+
+    /* Verified status */
+    --verified: 158 70% 40%;
+    --verified-foreground: 0 0% 100%;
+
+    --pending: 42 90% 50%;
+    --pending-foreground: 42 90% 15%;
+
+    --border: 140 20% 88%;
+    --input: 140 20% 88%;
+    --ring: 158 40% 32%;
+
+    --radius: 0.75rem;
+
+    /* Custom shadows */
+    --shadow-soft: 0 4px 20px -4px hsl(160 30% 12% / 0.08);
+    --shadow-card: 0 8px 32px -8px hsl(160 30% 12% / 0.12);
+    --shadow-elevated: 0 16px 48px -12px hsl(160 30% 12% / 0.18);
+
+    /* Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(158 40% 32%) 0%, hsl(185 60% 35%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(140 15% 98%) 100%);
+    --gradient-blockchain: linear-gradient(135deg, hsl(185 60% 35%) 0%, hsl(200 50% 30%) 100%);
+
+    /* Sidebar */
+    --sidebar-background: 160 25% 10%;
+    --sidebar-foreground: 40 30% 95%;
+    --sidebar-primary: 158 50% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 160 30% 18%;
+    --sidebar-accent-foreground: 40 30% 95%;
+    --sidebar-border: 160 25% 20%;
+    --sidebar-ring: 158 50% 45%;
+  }
+
+  .dark {
+    --background: 160 30% 8%;
+    --foreground: 40 20% 95%;
+
+    --card: 160 25% 12%;
+    --card-foreground: 40 20% 95%;
+
+    --popover: 160 25% 12%;
+    --popover-foreground: 40 20% 95%;
+
+    --primary: 158 50% 45%;
+    --primary-foreground: 160 30% 8%;
+
+    --secondary: 160 20% 20%;
+    --secondary-foreground: 40 20% 90%;
+
+    --muted: 160 20% 18%;
+    --muted-foreground: 160 10% 60%;
+
+    --accent: 42 70% 50%;
+    --accent-foreground: 42 70% 10%;
+
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 0 0% 100%;
+
+    --blockchain: 185 50% 45%;
+    --blockchain-foreground: 0 0% 100%;
+
+    --verified: 158 60% 50%;
+    --verified-foreground: 0 0% 100%;
+
+    --border: 160 20% 22%;
+    --input: 160 20% 22%;
+    --ring: 158 50% 45%;
+
+    --sidebar-background: 160 30% 6%;
+    --sidebar-foreground: 40 20% 95%;
+    --sidebar-primary: 158 50% 50%;
+    --sidebar-primary-foreground: 160 30% 8%;
+    --sidebar-accent: 160 25% 14%;
+    --sidebar-accent-foreground: 40 20% 95%;
+    --sidebar-border: 160 25% 16%;
+    --sidebar-ring: 158 50% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'DM Sans', system-ui, sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+  }
+}
+
+@layer utilities {
+  .text-gradient-hero {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-hero);
+  }
+
+  .bg-gradient-hero {
+    background-image: var(--gradient-hero);
+  }
+
+  .bg-gradient-blockchain {
+    background-image: var(--gradient-blockchain);
+  }
+
+  .shadow-soft {
+    box-shadow: var(--shadow-soft);
+  }
+
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+
+  .shadow-elevated {
+    box-shadow: var(--shadow-elevated);
+  }
+
+  /* Blockchain pattern overlay */
+  .blockchain-pattern {
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 5L52.98 18.75V46.25L30 60L7.02 46.25V18.75L30 5z' fill='none' stroke='%23ffffff' stroke-opacity='0.08' stroke-width='1'/%3E%3C/svg%3E");
+  }
+
+  /* Verification pulse animation */
+  @keyframes verification-pulse {
+    0%, 100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+    50% {
+      transform: scale(1.05);
+      opacity: 0.8;
+    }
+  }
+
+  .animate-verification {
+    animation: verification-pulse 2s ease-in-out infinite;
+  }
+
+  /* Fade in animation */
+  @keyframes fade-in-up {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .animate-fade-in-up {
+    animation: fade-in-up 0.6s ease-out forwards;
+  }
+
+  .animation-delay-100 { animation-delay: 0.1s; }
+  .animation-delay-200 { animation-delay: 0.2s; }
+  .animation-delay-300 { animation-delay: 0.3s; }
+  .animation-delay-400 { animation-delay: 0.4s; }
+}

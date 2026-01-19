@@ -1,0 +1,4 @@
+project_id = "webvmszanenmgcsqhhta"
+
+[functions.verify-menu]
+verify_jwt = false
