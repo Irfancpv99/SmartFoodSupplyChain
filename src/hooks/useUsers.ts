@@ -160,7 +160,16 @@ export function useAssignRole() {
 
       // If the role was assigned to the currently logged-in user, refresh their roles
       if (user && userId === user.id) {
-        await refreshRoles();
+        try {
+          await refreshRoles();
+          console.log('Roles refreshed successfully after assignment');
+        } catch (error) {
+          console.error('Failed to refresh roles after assignment:', error);
+          // Show a warning but don't fail the mutation
+          toast.warning('Role assigned but failed to refresh. Please refresh the page.', {
+            description: 'Your new role is active but you may need to reload.',
+          });
+        }
       }
     },
     onSuccess: () => {
@@ -170,8 +179,13 @@ export function useAssignRole() {
       toast.success('Role assigned successfully');
     },
     onError: (error) => {
-      toast.error(`Failed to assign role: ${error.message}`);
+      console.error('Failed to assign role:', error);
+      toast.error('Failed to assign role', {
+        description: error.message || 'Please try again or contact support.',
+      });
     },
+    retry: 2, // Retry up to 2 times on failure
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
   });
 }
 
