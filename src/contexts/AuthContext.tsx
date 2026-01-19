@@ -24,17 +24,19 @@ const retryWithBackoff = async <T,>(
   maxRetries: number = 3,
   baseDelay: number = 1000
 ): Promise<T> => {
+  let lastError: unknown;
   for (let i = 0; i < maxRetries; i++) {
     try {
       return await fn();
     } catch (error) {
-      if (i === maxRetries - 1) throw error;
+      lastError = error;
+      if (i === maxRetries - 1) break;
       const delay = baseDelay * Math.pow(2, i);
       console.warn(`Retry attempt ${i + 1}/${maxRetries} after ${delay}ms`, error);
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
-  throw new Error('Max retries exceeded');
+  throw lastError;
 };
 
 export function AuthProvider({ children }: { children: ReactNode }) {

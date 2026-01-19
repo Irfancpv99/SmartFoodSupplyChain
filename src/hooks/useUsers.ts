@@ -166,8 +166,8 @@ export function useAssignRole() {
         } catch (error) {
           console.error('Failed to refresh roles after assignment:', error);
           // Show a warning but don't fail the mutation
-          toast.warning('Role assigned but failed to refresh. Please refresh the page.', {
-            description: 'Your new role is active but you may need to reload.',
+          toast.warning('Role assigned but refresh failed', {
+            description: 'Please refresh your browser to see the updated permissions.',
           });
         }
       }
