@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -61,13 +63,32 @@ interface MenuItemForm {
 }
 
 export default function SchoolAdminPage() {
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { user, isLoading: authLoading, hasRole } = useAuth();
   const { data: school, isLoading: schoolLoading } = useCurrentSchool();
   const { data: ingredients = [], isLoading: ingredientsLoading } = useIngredients(school?.id);
   const { data: documents = [], isLoading: docsLoading } = useDocuments(undefined, school?.id);
   const { data: menus = [], isLoading: menusLoading } = useMenus(school?.id);
   const createMenu = useCreateMenu();
   const publishMenu = usePublishMenu();
+
+  // Route guard: Check if user has school_admin role
+  useEffect(() => {
+    if (!authLoading) {
+      if (!user) {
+        navigate('/login');
+      } else if (!hasRole('school_admin')) {
+        // Redirect to appropriate dashboard based on their role
+        if (hasRole('admin')) {
+          navigate('/admin');
+        } else if (hasRole('vendor')) {
+          navigate('/vendor');
+        } else {
+          navigate('/');
+        }
+      }
+    }
+  }, [user, authLoading, hasRole, navigate]);
 
   const [activeTab, setActiveTab] = useState<'deliveries' | 'menus' | 'create'>('deliveries');
   const [menuItems, setMenuItems] = useState<MenuItemForm[]>([
@@ -214,6 +235,22 @@ export default function SchoolAdminPage() {
       default: return 'pending';
     }
   };
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-screen">
+          <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
+
+  // Only render if user has school_admin role
+  if (!user || !hasRole('school_admin')) {
+    return null;
+  }
 
   if (schoolLoading) {
     return (
