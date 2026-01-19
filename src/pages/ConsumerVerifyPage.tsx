@@ -19,6 +19,22 @@ import {
 
 const MENU_PATH_PREFIX = "/menu/";
 
+// Sanitize menu ID to prevent XSS and ensure valid format
+// Menu IDs should match the format: MENU-YYYYMMDD-XXXXXX
+const sanitizeMenuId = (input: string): string | null => {
+  const trimmed = input.trim();
+  
+  // Allow only alphanumeric characters, hyphens, and underscores
+  const sanitized = trimmed.replace(/[^a-zA-Z0-9-_]/g, '');
+  
+  // Validate that the result is not empty and has reasonable length
+  if (!sanitized || sanitized.length === 0 || sanitized.length > 100) {
+    return null;
+  }
+  
+  return sanitized;
+};
+
 export default function ConsumerVerifyPage() {
   const [menuId, setMenuId] = useState("");
   const [showScanner, setShowScanner] = useState(false);
@@ -28,27 +44,33 @@ export default function ConsumerVerifyPage() {
     if (!menuId.trim()) {
       return;
     }
-    // Sanitize and redirect to the menu page
-    const sanitizedMenuId = menuId.trim().replace(/[^a-zA-Z0-9-_]/g, '');
+    
+    const sanitizedMenuId = sanitizeMenuId(menuId);
+    if (!sanitizedMenuId) {
+      return; // Invalid menu ID, do nothing
+    }
+    
     navigate(`${MENU_PATH_PREFIX}${sanitizedMenuId}`);
   };
 
   const handleScan = (result: string) => {
     setShowScanner(false);
     
-    // Sanitize the scanned result to prevent XSS
-    const sanitizedResult = result.trim();
+    let menuIdToNavigate: string | null = null;
     
     // Check if the scanned result is already a URL path like /menu/{menuId}
-    if (sanitizedResult.startsWith(MENU_PATH_PREFIX)) {
+    if (result.trim().startsWith(MENU_PATH_PREFIX)) {
       // Extract the menu ID from the path and sanitize it
-      const menuIdFromPath = sanitizedResult.substring(MENU_PATH_PREFIX.length);
-      const sanitizedMenuId = menuIdFromPath.replace(/[^a-zA-Z0-9-_]/g, '');
-      navigate(`${MENU_PATH_PREFIX}${sanitizedMenuId}`);
+      const menuIdFromPath = result.trim().substring(MENU_PATH_PREFIX.length);
+      menuIdToNavigate = sanitizeMenuId(menuIdFromPath);
     } else {
-      // Otherwise, it's just a menuId, sanitize and navigate to /menu/{menuId}
-      const sanitizedMenuId = sanitizedResult.replace(/[^a-zA-Z0-9-_]/g, '');
-      navigate(`${MENU_PATH_PREFIX}${sanitizedMenuId}`);
+      // Otherwise, it's just a menuId, sanitize it
+      menuIdToNavigate = sanitizeMenuId(result);
+    }
+    
+    // Navigate only if we have a valid menu ID
+    if (menuIdToNavigate) {
+      navigate(`${MENU_PATH_PREFIX}${menuIdToNavigate}`);
     }
   };
 
