@@ -13,6 +13,7 @@ interface AuthContextType {
   signUp: (email: string, password: string, fullName: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   hasRole: (role: AppRole) => boolean;
+  refreshRoles: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -24,13 +25,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [roles, setRoles] = useState<AppRole[]>([]);
 
   const fetchRoles = async (userId: string) => {
-    const { data, error } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', userId);
-    
-    if (!error && data) {
-      setRoles(data.map(r => r.role as AppRole));
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId);
+      
+      if (!error && data) {
+        setRoles(data.map(r => r.role as AppRole));
+      } else if (error) {
+        console.error('Error fetching roles:', error);
+        setRoles([]);
+      }
+    } catch (error) {
+      console.error('Error fetching roles:', error);
+      setRoles([]);
+    }
+  };
+
+  const refreshRoles = async () => {
+    if (user) {
+      await fetchRoles(user.id);
     }
   };
 
@@ -42,8 +57,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
         
         if (session?.user) {
-          // Defer role fetching to avoid blocking
-          setTimeout(() => fetchRoles(session.user.id), 0);
+          // Fetch roles synchronously, not deferred
+          await fetchRoles(session.user.id);
         } else {
           setRoles([]);
         }
@@ -53,11 +68,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
 
     // THEN check current session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
-        fetchRoles(session.user.id);
+        await fetchRoles(session.user.id);
       }
       setIsLoading(false);
     });
@@ -107,6 +122,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signUp,
         signOut,
         hasRole,
+        refreshRoles,
       }}
     >
       {children}

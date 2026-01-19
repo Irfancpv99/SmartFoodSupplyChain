@@ -14,7 +14,7 @@ import { useAuth } from "@/contexts/AuthContext";
 
 export default function LoginPage() {
   const navigate = useNavigate();
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, user, hasRole, isLoading: authLoading } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   
@@ -23,7 +23,22 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
 
-  const handleLogin = async (e: React.FormEvent, redirectPath: string) => {
+  // If user is already logged in, redirect to appropriate dashboard
+  useEffect(() => {
+    if (!authLoading && user) {
+      if (hasRole('admin')) {
+        navigate('/admin');
+      } else if (hasRole('vendor')) {
+        navigate('/vendor');
+      } else if (hasRole('school_admin')) {
+        navigate('/school');
+      } else {
+        navigate('/');
+      }
+    }
+  }, [user, authLoading, hasRole, navigate]);
+
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
@@ -34,15 +49,19 @@ export default function LoginPage() {
         toast.error("Login failed", {
           description: error.message,
         });
+        setIsLoading(false);
       } else {
         toast.success("Login successful!", {
           description: "Redirecting to your dashboard...",
         });
-        navigate(redirectPath);
+        // Set a timeout to clear loading state if redirect doesn't happen within 3 seconds
+        setTimeout(() => {
+          setIsLoading(false);
+        }, 3000);
+        // The useEffect above will handle the redirect based on roles
       }
     } catch (err) {
       toast.error("An unexpected error occurred");
-    } finally {
       setIsLoading(false);
     }
   };
@@ -177,7 +196,7 @@ export default function LoginPage() {
                   </TabsList>
 
                   <TabsContent value="vendor">
-                    <form onSubmit={(e) => handleLogin(e, '/vendor')} className="space-y-4">
+                    <form onSubmit={handleLogin} className="space-y-4">
                       <div className="space-y-2">
                         <Label htmlFor="vendor-email">Email</Label>
                         <div className="relative">
@@ -213,13 +232,13 @@ export default function LoginPage() {
                         className="w-full bg-gradient-hero"
                         disabled={isLoading}
                       >
-                        {isLoading ? "Signing in..." : "Sign in as Vendor"}
+                        {isLoading ? "Signing in..." : "Sign in"}
                       </Button>
                     </form>
                   </TabsContent>
 
                   <TabsContent value="school">
-                    <form onSubmit={(e) => handleLogin(e, '/school')} className="space-y-4">
+                    <form onSubmit={handleLogin} className="space-y-4">
                       <div className="space-y-2">
                         <Label htmlFor="school-email">School Email</Label>
                         <div className="relative">
@@ -255,13 +274,13 @@ export default function LoginPage() {
                         className="w-full bg-gradient-hero"
                         disabled={isLoading}
                       >
-                        {isLoading ? "Signing in..." : "Sign in as School"}
+                        {isLoading ? "Signing in..." : "Sign in"}
                       </Button>
                     </form>
                   </TabsContent>
 
                   <TabsContent value="admin">
-                    <form onSubmit={(e) => handleLogin(e, '/admin')} className="space-y-4">
+                    <form onSubmit={handleLogin} className="space-y-4">
                       <div className="space-y-2">
                         <Label htmlFor="admin-email">Admin Email</Label>
                         <div className="relative">
@@ -297,7 +316,7 @@ export default function LoginPage() {
                         className="w-full bg-gradient-hero"
                         disabled={isLoading}
                       >
-                        {isLoading ? "Signing in..." : "Sign in as Admin"}
+                        {isLoading ? "Signing in..." : "Sign in"}
                       </Button>
                     </form>
                   </TabsContent>

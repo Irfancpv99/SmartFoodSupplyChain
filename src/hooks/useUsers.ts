@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
 
 export interface UserWithRoles {
   id: string;
@@ -86,6 +87,7 @@ export function useAllUsers() {
 
 export function useAssignRole() {
   const queryClient = useQueryClient();
+  const { user, refreshRoles } = useAuth();
 
   return useMutation({
     mutationFn: async ({ userId, role }: { userId: string; role: 'admin' | 'school_admin' | 'vendor' }) => {
@@ -154,6 +156,11 @@ export function useAssignRole() {
 
           if (schoolError) throw schoolError;
         }
+      }
+
+      // If the role was assigned to the currently logged-in user, refresh their roles
+      if (user && userId === user.id) {
+        await refreshRoles();
       }
     },
     onSuccess: () => {

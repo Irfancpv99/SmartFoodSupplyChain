@@ -1,5 +1,6 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,12 +50,31 @@ interface ProductEntry {
 }
 
 export default function VendorPortalPage() {
-  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { user, isLoading: authLoading, hasRole } = useAuth();
   const { data: vendor, isLoading: vendorLoading } = useCurrentVendor();
   const { data: schools = [] } = useSchools();
   const { data: documents = [], isLoading: docsLoading } = useDocuments(vendor?.id);
   const uploadDocument = useUploadDocument();
   const anchorToBlockchain = useAnchorToBlockchain();
+
+  // Route guard: Check if user has vendor role
+  useEffect(() => {
+    if (!authLoading) {
+      if (!user) {
+        navigate('/login');
+      } else if (!hasRole('vendor')) {
+        // Redirect to appropriate dashboard based on their role
+        if (hasRole('admin')) {
+          navigate('/admin');
+        } else if (hasRole('school_admin')) {
+          navigate('/school');
+        } else {
+          navigate('/');
+        }
+      }
+    }
+  }, [user, authLoading, hasRole, navigate]);
 
   const [activeTab, setActiveTab] = useState<'upload' | 'history'>('upload');
   const [selectedSchool, setSelectedSchool] = useState("");
@@ -149,6 +169,22 @@ export default function VendorPortalPage() {
       // Error handled in hook
     }
   };
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
+
+  // Only render if user has vendor role
+  if (!user || !hasRole('vendor')) {
+    return null;
+  }
 
   if (vendorLoading) {
     return (

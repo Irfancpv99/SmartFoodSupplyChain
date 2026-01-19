@@ -1,4 +1,6 @@
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
+import { useEffect } from "react";
 import { Layout } from "@/components/layout/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
@@ -39,13 +41,34 @@ import {
 } from "@/hooks/useAdminDashboard";
 import { UserManagement } from "@/components/admin/UserManagement";
 import { DocumentVerification } from "@/components/admin/DocumentVerification";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function AdminDashboardPage() {
+  const navigate = useNavigate();
+  const { user, isLoading: authLoading, hasRole } = useAuth();
   const { data: stats, isLoading: statsLoading } = useDashboardStats();
   const { data: recentDocuments = [], isLoading: docsLoading } = useRecentDocuments();
   const { data: recentBlockchain = [], isLoading: blockchainLoading } = useRecentBlockchainRecords();
   const { data: schools = [], isLoading: schoolsLoading } = useAllSchools();
   const { data: vendors = [], isLoading: vendorsLoading } = useAllVendors();
+
+  // Route guard: Check if user has admin role
+  useEffect(() => {
+    if (!authLoading) {
+      if (!user) {
+        navigate('/login');
+      } else if (!hasRole('admin')) {
+        // Redirect to appropriate dashboard based on their role
+        if (hasRole('vendor')) {
+          navigate('/vendor');
+        } else if (hasRole('school_admin')) {
+          navigate('/school');
+        } else {
+          navigate('/');
+        }
+      }
+    }
+  }, [user, authLoading, hasRole, navigate]);
 
   const statCards = [
     {
@@ -103,6 +126,22 @@ export default function AdminDashboardPage() {
       default: return 'pending';
     }
   };
+
+  // Show loading while checking authentication
+  if (authLoading) {
+    return (
+      <Layout>
+        <div className="min-h-screen flex items-center justify-center">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </Layout>
+    );
+  }
+
+  // Only render if user has admin role
+  if (!user || !hasRole('admin')) {
+    return null;
+  }
 
   return (
     <Layout>
