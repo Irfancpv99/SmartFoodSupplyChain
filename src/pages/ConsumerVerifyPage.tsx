@@ -1,129 +1,47 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { StatusBadge } from "@/components/ui/StatusBadge";
 import { QRScanner } from "@/components/QRScanner";
+import { useAuth } from "@/contexts/AuthContext";
 import { 
   QrCode, 
   Search, 
-  CheckCircle2, 
   Shield, 
   FileText,
-  Truck,
-  Calendar,
-  Package,
-  Link as LinkIcon,
-  ChevronDown,
-  ChevronUp,
-  ExternalLink,
   Camera,
-  Loader2,
-  AlertCircle
+  Leaf,
+  Info
 } from "lucide-react";
-import { useVerifyMenu } from "@/hooks/useMenus";
-import { format } from "date-fns";
-
-interface VerificationResult {
-  verified: boolean;
-  menu: {
-    id: string;
-    menuId: string;
-    name: string;
-    date: string;
-    mealType: string;
-    school: { name: string; city?: string };
-    items: Array<{
-      id: string;
-      name: string;
-      description: string | null;
-      category: string | null;
-      allergens: string[] | null;
-      ingredients: Array<{
-        id: string;
-        name: string;
-        origin: string | null;
-        quantity: number | null;
-        unit: string | null;
-        document: {
-          id: string;
-          ddtNumber: string;
-          status: string;
-          vendor: { name: string; business_name: string | null };
-        } | null;
-      }>;
-    }>;
-  };
-  documents: Array<{
-    id: string;
-    ddtNumber: string;
-    deliveryDate: string;
-    status: string;
-    hash: string | null;
-    blockchainTxId: string | null;
-    vendor: { name: string; business_name: string | null };
-  }>;
-  verification: {
-    privateChain: boolean;
-    publicChain: boolean;
-    menuHash: string | null;
-    lastVerified: string;
-    blockchainRecord: {
-      txId: string;
-      blockNumber: number;
-      timestamp: string;
-    } | null;
-  };
-}
 
 export default function ConsumerVerifyPage() {
   const [menuId, setMenuId] = useState("");
-  const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
-  const [expandedItems, setExpandedItems] = useState<string[]>([]);
   const [showScanner, setShowScanner] = useState(false);
-  const [verificationError, setVerificationError] = useState<string | null>(null);
+  const navigate = useNavigate();
+  const { user } = useAuth();
 
-  const verifyMenuMutation = useVerifyMenu();
-
-  const handleVerify = async (id?: string) => {
-    const searchId = id || menuId;
-    if (!searchId) {
-      setVerificationError("Please enter a menu ID");
+  const handleVerify = () => {
+    if (!menuId.trim()) {
       return;
     }
-
-    setVerificationError(null);
-    
-    try {
-      const result = await verifyMenuMutation.mutateAsync(searchId);
-      
-      if (result.error) {
-        setVerificationError(result.error);
-        setVerificationResult(null);
-      } else {
-        setVerificationResult(result);
-      }
-    } catch (error) {
-      setVerificationError("Failed to verify menu. Please try again.");
-      setVerificationResult(null);
-    }
+    // Redirect to the menu page
+    navigate(`/menu/${menuId.trim()}`);
   };
 
   const handleScan = (result: string) => {
     setShowScanner(false);
-    setMenuId(result);
-    handleVerify(result);
-  };
-
-  const toggleItemExpand = (itemId: string) => {
-    setExpandedItems(prev => 
-      prev.includes(itemId) 
-        ? prev.filter(i => i !== itemId) 
-        : [...prev, itemId]
-    );
+    
+    // Check if the scanned result is already a URL path like /menu/{menuId}
+    if (result.startsWith('/menu/')) {
+      navigate(result);
+    } else {
+      // Otherwise, it's just a menuId, so navigate to /menu/{menuId}
+      navigate(`/menu/${result}`);
+    }
   };
 
   return (
@@ -142,11 +60,10 @@ export default function ConsumerVerifyPage() {
                 <QrCode className="h-8 w-8 text-primary-foreground" />
               </div>
               <h1 className="text-3xl md:text-4xl font-heading font-bold text-primary-foreground mb-4">
-                Verify Your Child's Meal
+                Scan the QR Code on Your Child's Menu
               </h1>
               <p className="text-lg text-primary-foreground/80">
-                Scan the QR code on the menu or enter the menu ID to view complete ingredient traceability. 
-                No login required.
+                Or enter the menu ID printed on the menu card to view ingredients, sources, and blockchain verification proof.
               </p>
             </motion.div>
           </div>
@@ -159,10 +76,10 @@ export default function ConsumerVerifyPage() {
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Search className="h-5 w-5 text-primary" />
-                  Menu Verification
+                  Find Your Child's Menu
                 </CardTitle>
                 <CardDescription>
-                  Scan a QR code or enter the menu ID
+                  Scan the QR code or enter the menu ID to view full details
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -187,30 +104,14 @@ export default function ConsumerVerifyPage() {
                     <Camera className="h-5 w-5" />
                   </Button>
                   <Button 
-                    onClick={() => handleVerify()} 
-                    disabled={verifyMenuMutation.isPending}
+                    onClick={handleVerify} 
+                    disabled={!menuId.trim()}
                     className="h-12 px-6 bg-gradient-hero"
                   >
-                    {verifyMenuMutation.isPending ? (
-                      <div className="flex items-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Verifying...
-                      </div>
-                    ) : (
-                      <>
-                        <Shield className="mr-2 h-4 w-4" />
-                        Verify
-                      </>
-                    )}
+                    <Search className="mr-2 h-4 w-4" />
+                    View Menu
                   </Button>
                 </div>
-                
-                {verificationError && (
-                  <div className="mt-4 p-3 bg-destructive/10 text-destructive rounded-lg flex items-center gap-2">
-                    <AlertCircle className="h-4 w-4" />
-                    <span className="text-sm">{verificationError}</span>
-                  </div>
-                )}
               </CardContent>
             </Card>
           </div>
@@ -230,264 +131,71 @@ export default function ConsumerVerifyPage() {
           </>
         )}
 
-        {/* Verification Results */}
-        {verificationResult && (
-          <motion.section 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="pb-16"
-          >
-            <div className="container max-w-4xl">
-              {/* Verification Status Card */}
-              <Card className={`mb-6 shadow-card ${
-                verificationResult.verified 
-                  ? 'border-verified/30 bg-verified/5' 
-                  : 'border-warning/30 bg-warning/5'
-              }`}>
-                <CardContent className="py-6">
-                  <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                      <div className={`flex items-center justify-center w-14 h-14 rounded-full ${
-                        verificationResult.verified 
-                          ? 'bg-verified/10 animate-verification' 
-                          : 'bg-warning/10'
-                      }`}>
-                        <CheckCircle2 className={`h-8 w-8 ${
-                          verificationResult.verified ? 'text-verified' : 'text-warning'
-                        }`} />
-                      </div>
-                      <div>
-                        <h3 className="font-heading font-semibold text-lg">
-                          {verificationResult.verified ? 'Menu Verified' : 'Verification Pending'}
-                        </h3>
-                        <p className="text-sm text-muted-foreground">
-                          {verificationResult.verified 
-                            ? 'Blockchain verification successful' 
-                            : 'Menu not yet anchored to blockchain'}
-                        </p>
-                      </div>
+        {/* Info Section */}
+        <section className="py-16 bg-muted/30">
+          <div className="container max-w-4xl">
+            <h2 className="text-2xl font-heading font-bold text-center mb-4">
+              What You'll See
+            </h2>
+            <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
+              When you scan or search for a menu, you'll get complete transparency about what's served at school
+            </p>
+            <div className="grid md:grid-cols-3 gap-6">
+              <Card className="text-center shadow-card">
+                <CardContent className="pt-6">
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary mb-4">
+                    <Leaf className="h-6 w-6" />
+                  </div>
+                  <h3 className="font-semibold mb-2">Every Ingredient</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Complete list of ingredients with origins and quantities for each menu item
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="text-center shadow-card">
+                <CardContent className="pt-6">
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary mb-4">
+                    <FileText className="h-6 w-6" />
+                  </div>
+                  <h3 className="font-semibold mb-2">Verified Sources</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Supplier information and delivery documents for full supply chain visibility
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="text-center shadow-card">
+                <CardContent className="pt-6">
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary mb-4">
+                    <Shield className="h-6 w-6" />
+                  </div>
+                  <h3 className="font-semibold mb-2">Blockchain Proof</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Cryptographic verification that the supply chain data is authentic and tamper-proof
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="mt-12 max-w-2xl mx-auto">
+              <Card className="border-primary/20 bg-primary/5">
+                <CardContent className="pt-6">
+                  <div className="flex items-start gap-3">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary shrink-0 mt-1">
+                      <Info className="h-4 w-4" />
                     </div>
-                    <div className="flex items-center gap-4">
-                      <div className="text-center">
-                        <div className="text-xs text-muted-foreground mb-1">Private Chain</div>
-                        <StatusBadge 
-                          status={verificationResult.verification.privateChain ? 'verified' : 'pending'} 
-                          size="sm" 
-                        />
-                      </div>
-                      <div className="text-center">
-                        <div className="text-xs text-muted-foreground mb-1">Public Chain</div>
-                        <StatusBadge 
-                          status={verificationResult.verification.publicChain ? 'verified' : 'pending'} 
-                          size="sm" 
-                        />
-                      </div>
+                    <div>
+                      <h4 className="font-semibold mb-2">No Login Required</h4>
+                      <p className="text-sm text-muted-foreground">
+                        All menu information is publicly accessible. Simply scan the QR code on the menu card 
+                        or enter the menu ID to see complete ingredient details and blockchain verification instantly.
+                      </p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-
-              {/* Menu Info */}
-              <Card className="mb-6 shadow-card">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <Calendar className="h-5 w-5 text-primary" />
-                        Menu Details
-                      </CardTitle>
-                      <CardDescription>
-                        {verificationResult.menu.school?.name}
-                        {verificationResult.menu.school?.city && ` - ${verificationResult.menu.school.city}`}
-                      </CardDescription>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-heading font-semibold">
-                        {format(new Date(verificationResult.menu.date), 'EEEE, MMMM d, yyyy')}
-                      </div>
-                      <div className="text-sm text-muted-foreground capitalize">
-                        {verificationResult.menu.mealType} Menu
-                      </div>
-                    </div>
-                  </div>
-                </CardHeader>
-              </Card>
-
-              {/* Menu Items */}
-              <div className="space-y-4">
-                <h3 className="font-heading font-semibold text-lg">Menu Items & Traceability</h3>
-                
-                {verificationResult.menu.items?.map((item) => (
-                  <Card key={item.id} className="shadow-card overflow-hidden">
-                    <button
-                      onClick={() => toggleItemExpand(item.id)}
-                      className="w-full px-6 py-4 flex items-center justify-between hover:bg-muted/50 transition-colors"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10 text-primary">
-                          <Package className="h-5 w-5" />
-                        </div>
-                        <div className="text-left">
-                          <h4 className="font-semibold">{item.name}</h4>
-                          <p className="text-sm text-muted-foreground">
-                            {item.ingredients?.length || 0} ingredients traced
-                          </p>
-                        </div>
-                      </div>
-                      {expandedItems.includes(item.id) ? (
-                        <ChevronUp className="h-5 w-5 text-muted-foreground" />
-                      ) : (
-                        <ChevronDown className="h-5 w-5 text-muted-foreground" />
-                      )}
-                    </button>
-                    
-                    {expandedItems.includes(item.id) && (
-                      <motion.div
-                        initial={{ height: 0, opacity: 0 }}
-                        animate={{ height: 'auto', opacity: 1 }}
-                        exit={{ height: 0, opacity: 0 }}
-                        className="border-t"
-                      >
-                        <div className="p-4 space-y-3 bg-muted/20">
-                          {item.allergens && item.allergens.length > 0 && (
-                            <div className="flex flex-wrap gap-1 mb-2">
-                              <span className="text-xs text-muted-foreground">Allergens:</span>
-                              {item.allergens.map((allergen, i) => (
-                                <span key={i} className="text-xs bg-warning/20 text-warning px-2 py-0.5 rounded">
-                                  {allergen}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-                          
-                          {item.ingredients?.map((ingredient) => (
-                            <div key={ingredient.id} className="bg-card rounded-lg p-4 border">
-                              <div className="flex items-start justify-between mb-3">
-                                <div>
-                                  <h5 className="font-medium">{ingredient.name}</h5>
-                                  {ingredient.origin && (
-                                    <p className="text-xs text-muted-foreground">Origin: {ingredient.origin}</p>
-                                  )}
-                                </div>
-                                <StatusBadge 
-                                  status={ingredient.document ? 'verified' : 'pending'} 
-                                  size="sm" 
-                                />
-                              </div>
-                              
-                              {ingredient.document && (
-                                <div className="bg-muted/30 rounded-lg p-3 text-sm">
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <FileText className="h-4 w-4 text-primary" />
-                                    <span className="font-medium">{ingredient.document.ddtNumber}</span>
-                                  </div>
-                                  <div className="flex items-center gap-1.5 text-muted-foreground">
-                                    <Truck className="h-3.5 w-3.5" />
-                                    <span>
-                                      {ingredient.document.vendor?.business_name || ingredient.document.vendor?.name}
-                                    </span>
-                                  </div>
-                                </div>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      </motion.div>
-                    )}
-                  </Card>
-                ))}
-              </div>
-
-              {/* Blockchain Record */}
-              {verificationResult.verification.blockchainRecord && (
-                <Card className="mt-6 shadow-card">
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-base">
-                      <LinkIcon className="h-5 w-5 text-blockchain" />
-                      Blockchain Record
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      {verificationResult.verification.menuHash && (
-                        <div className="flex items-center justify-between py-2 border-b">
-                          <span className="text-sm text-muted-foreground">Menu Hash</span>
-                          <code className="text-xs bg-muted px-2 py-1 rounded">
-                            {verificationResult.verification.menuHash.substring(0, 16)}...
-                          </code>
-                        </div>
-                      )}
-                      <div className="flex items-center justify-between py-2 border-b">
-                        <span className="text-sm text-muted-foreground">Block Number</span>
-                        <span className="text-sm font-mono">
-                          #{verificationResult.verification.blockchainRecord.blockNumber}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between py-2 border-b">
-                        <span className="text-sm text-muted-foreground">Timestamp</span>
-                        <span className="text-sm">
-                          {format(new Date(verificationResult.verification.blockchainRecord.timestamp), 'MMM d, yyyy HH:mm')}
-                        </span>
-                      </div>
-                      <div className="flex items-center justify-between py-2">
-                        <span className="text-sm text-muted-foreground">Transaction</span>
-                        <code className="text-xs text-blockchain">
-                          {verificationResult.verification.blockchainRecord.txId.substring(0, 20)}...
-                        </code>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
             </div>
-          </motion.section>
-        )}
-
-        {/* Info Section */}
-        {!verificationResult && !verificationError && (
-          <section className="py-16 bg-muted/30">
-            <div className="container max-w-4xl">
-              <h2 className="text-2xl font-heading font-bold text-center mb-8">
-                How Verification Works
-              </h2>
-              <div className="grid md:grid-cols-3 gap-6">
-                <Card className="text-center shadow-card">
-                  <CardContent className="pt-6">
-                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary mb-4">
-                      <QrCode className="h-6 w-6" />
-                    </div>
-                    <h3 className="font-semibold mb-2">Scan QR Code</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Find the QR code on the cafeteria menu display or printed handout
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="text-center shadow-card">
-                  <CardContent className="pt-6">
-                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary mb-4">
-                      <Shield className="h-6 w-6" />
-                    </div>
-                    <h3 className="font-semibold mb-2">Instant Verification</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Our system checks the blockchain to verify document authenticity
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card className="text-center shadow-card">
-                  <CardContent className="pt-6">
-                    <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-primary/10 text-primary mb-4">
-                      <FileText className="h-6 w-6" />
-                    </div>
-                    <h3 className="font-semibold mb-2">Full Traceability</h3>
-                    <p className="text-sm text-muted-foreground">
-                      View every ingredient source, vendor, and delivery document
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
-          </section>
-        )}
+          </div>
+        </section>
       </div>
     </Layout>
   );
